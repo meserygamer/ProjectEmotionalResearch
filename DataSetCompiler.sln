@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinopoiskFilmReviewsParser", "KinopoiskFilmReviewsParser\KinopoiskFilmReviewsParser.csproj", "{6F825A06-F63E-410F-AE6B-E73FF821136E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSetCompiler.API", "DataSetCompiler.API\DataSetCompiler.API.csproj", "{1317F2B3-0587-43DF-B7FD-33FFB0B3709A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSetCompiler.Core", "DataSetCompiler.Core\DataSetCompiler.Core.csproj", "{873E3AF0-5CFB-4857-A97D-C83B5FB95E72}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6F825A06-F63E-410F-AE6B-E73FF821136E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F825A06-F63E-410F-AE6B-E73FF821136E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F825A06-F63E-410F-AE6B-E73FF821136E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F825A06-F63E-410F-AE6B-E73FF821136E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1317F2B3-0587-43DF-B7FD-33FFB0B3709A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1317F2B3-0587-43DF-B7FD-33FFB0B3709A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1317F2B3-0587-43DF-B7FD-33FFB0B3709A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1317F2B3-0587-43DF-B7FD-33FFB0B3709A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{873E3AF0-5CFB-4857-A97D-C83B5FB95E72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{873E3AF0-5CFB-4857-A97D-C83B5FB95E72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{873E3AF0-5CFB-4857-A97D-C83B5FB95E72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{873E3AF0-5CFB-4857-A97D-C83B5FB95E72}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
