@@ -28,7 +28,7 @@ public static class Startup
                            "delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;"}
             });
         
-        driver.Url = "https://www.kinopoisk.ru/film/535341/reviews/ord/date/status/all/perpage/200/";
+        driver.Url = "https://www.kinopoisk.ru/film/535341/";
         WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(40));
         wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("userReview")));
         List<IWebElement> reviewsWebElements = new List<IWebElement>(driver.FindElements(By.ClassName("userReview")));
