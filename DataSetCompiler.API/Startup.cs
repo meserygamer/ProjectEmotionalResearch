@@ -37,11 +37,11 @@ public static class Startup
             string cookie = cookies.Split("; ")[i].Trim();
             driver.Manage().Cookies.AddCookie(
                 new Cookie
-                (cookie.Split('=')[0],
-                cookie.Split('=')[1]));
+                (cookie.Split('=')[0]
+                , cookie.Split('=')[1]));
         }
 
-        await driver.Navigate().GoToUrlAsync("https://www.kinopoisk.ru/film/535341/reviews/ord/date/status/all/perpage/200/");
+        await driver.Navigate().GoToUrlAsync("https://www.kinopoisk.ru/film/535341/reviews/ord/date/status/all/perpage/200/page/3/");
 
         WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(40));
         wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("userReview")));
