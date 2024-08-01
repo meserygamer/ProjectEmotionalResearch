@@ -62,8 +62,6 @@ public class ChromeStealthDriverFactory
             RemoveCDCVariables = true
         });
         
-        _chromeDriver.SpecialWait(2000);
-        
         _chromeDriver.ExecuteCdpCommand("Page.addScriptToEvaluateOnNewDocument"
             , new Dictionary<string, object>()
             {

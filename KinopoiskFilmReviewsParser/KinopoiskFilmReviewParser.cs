@@ -4,6 +4,7 @@ using DataSetCompiler.Core.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
+using SeleniumStealth.NET.Clients.Extensions;
 using Cookie = OpenQA.Selenium.Cookie;
 
 namespace KinopoiskFilmReviewsParser;
@@ -84,6 +85,7 @@ public class KinopoiskFilmReviewParser : IReviewsParser
         await _webDriver.Navigate().GoToUrlAsync(filmUrl + KINOPOISK_REVIEWS_PAGE_POSTFIX + $"{numberOfPage}/");
         WebDriverWait wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(40));
         await Task.Run(() => wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("userReview"))));
+        _webDriver.SpecialWait(new Random().Next(2000, 4000));
     }
 
     private async Task GoToUrlAsync(string url) 
@@ -105,28 +107,6 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     private IWebElement GetReviewOpinionElement(IWebElement reviewWebElement)
         => reviewWebElement.FindElement(By.XPath(KINOPOISK_FILM_REVIEW_OPINION_XPATH));
 
-    private int GetNumberOfReviewsForFilm(bool isVerifyingPage = false)
-    {
-        string currentUrl = _webDriver.Url;
-        if (!isVerifyingPage && !IsReviewsPage(currentUrl))
-            throw new WebException("Incorrect website for parsing reviews");
-
-        for (int nTry = 0; nTry < 5; nTry++)
-        {
-            try
-            {
-                IWebElement reviewsCounter = 
-                    _webDriver.FindElement(By.XPath("//div[@class='clear_all']/ul[@class='resp_type']/li[@class='all']/b"));
-                return Convert.ToInt32(reviewsCounter.Text);
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-        }
-        throw new WebException("Parsing review error");
-    }
-
     private bool IsReviewsPage(string url)
         => url.Contains(KINOPOISK_ORIGINAL_PAGE_URL) && url.Contains(KINOPOISK_REVIEWS_PAGE_POSTFIX);
     
@@ -134,6 +114,8 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     {
         if (String.IsNullOrEmpty(urlOnFilm))
             return new List<Review>();
+        
+        await LoadFilmReviewsPageAsync(urlOnFilm);
         
         int numberOfFilmReviews = GetNumberOfReviewsForFilm();
         int numberOfReviewsPage = (int)Math.Ceiling((decimal)numberOfFilmReviews / (decimal)NUMBER_OF_REVIEWS_PER_PAGE);
@@ -150,34 +132,39 @@ public class KinopoiskFilmReviewParser : IReviewsParser
 
     private List<Review> GetReviewsByPage()
     {
-        for (int nTry = 0; nTry < 5; nTry++)
+        return new SeleniumDomExceptionHandler().MakeManyRequestsForDom(() =>
         {
-            try
+            List<IWebElement> reviewsWebElements = new List<IWebElement>(GetAllReviewWebElements());
+            List<Review> reviews = new List<Review>();
+            Parallel.For(0, reviewsWebElements.Count, (i, state) =>
             {
-                List<IWebElement> reviewsWebElements = new List<IWebElement>(GetAllReviewWebElements());
-                List<Review> reviews = new List<Review>();
-                Parallel.For(0, reviewsWebElements.Count, (i, state) =>
+                IWebElement reviewTitle = GetReviewTitleElement(reviewsWebElements[i]);
+                IWebElement reviewText = GetReviewTextElement(reviewsWebElements[i]);
+                IWebElement reviewOpinion = GetReviewOpinionElement(reviewsWebElements[i]);
+                var review = new Review()
                 {
-                    IWebElement reviewTitle = GetReviewTitleElement(reviewsWebElements[i]);
-                    IWebElement reviewText = GetReviewTextElement(reviewsWebElements[i]);
-                    IWebElement reviewOpinion = GetReviewOpinionElement(reviewsWebElements[i]);
-                    var review = new Review()
-                    {
-                        ReviewTitle = reviewTitle.Text,
-                        ReviewText = reviewText.Text,
-                        ReviewOpinion = reviewOpinion.GetAttribute("class").Split(' ')[1]
-                    };
-                    reviews.Add(review);
-                });
+                    ReviewTitle = reviewTitle.Text,
+                    ReviewText = reviewText.Text,
+                    ReviewOpinion = reviewOpinion.GetAttribute("class").Split(' ')[1]
+                };
+                reviews.Add(review);
+            });
 
-                return reviews;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-        }
+            return reviews;
+        });
+    }
+    
+    private int GetNumberOfReviewsForFilm(bool isVerifyingPage = false)
+    {
+        string currentUrl = _webDriver.Url;
+        if (!isVerifyingPage && !IsReviewsPage(currentUrl))
+            throw new WebException($"Incorrect website for parsing reviews - {currentUrl}");
 
-        throw new WebException("Parsing review error");
+        return new SeleniumDomExceptionHandler().MakeManyRequestsForDom(() =>
+        {
+            IWebElement reviewsCounter = 
+                _webDriver.FindElement(By.XPath("//div[@class='clear_all']/ul[@class='resp_type']/li[@class='all']/b"));
+            return Convert.ToInt32(reviewsCounter.Text);
+        });
     }
 }
