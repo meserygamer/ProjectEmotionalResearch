@@ -35,7 +35,9 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     private const string KINOPOISK_FILM_REVIEW_TITLE_CLASS_NAME = "sub_title";
     private const string KINOPOISK_FILM_REVIEW_TEXT_XPATH = ".//div[2]/table/tbody/tr/td/div/p/span";
     private const string KINOPOISK_FILM_REVIEW_OPINION_XPATH = ".//div[2]";
-
+    
+    private const string KINOPOISK_COOKIES = "yashr=9996311731714779545; yuidss=2683313871714518733; _ym_uid=1714779546133347217; yandex_login=meserygamer@gmail.com; yandexuid=2683313871714518733; L=UjFkXXxgQHZ+cXNTQVVecU5BVlxzQHBdXwAHCwgTXxIeMBonJlo4A11vFxw8.1719859244.15790.338191.85435f1775d612d46c5a084f12412e9c; gdpr=0; _csrf=vgxe1hzq1bXOK7CIwSqnwDfj; disable_server_sso_redirect=1; ya_sess_id=3:1722432996.5.0.1719859244185:thvjBQ:23.1.2:1|1997835441.0.2.3:1719859244|30:10227272.536633.MmWo85VzC-RqOCX_2tamel6I1Dg; sessar=1.1192.CiAwXRJ0i1p5pXq1fV1Z3EWhARRsvUtDS4oG-1SYMFKWbg.AE3lDw3st-yVdrmV6LXvbI-5EnyQdGjUqhssAnrhMtg; ys=udn.cDptZXNlcnlnYW1lckBnbWFpbC5jb20%3D#c_chck.3181503154; i=Zs8/NZpnHWLv37vHFHR8CqVWoWt+vz26HvFJkx7OC7cda5PEnFDl96CXunFaCO10yytq0JpnrBwWI0aqgg8ODTwcO6k=; mda2_beacon=1722432996390; sso_status=sso.passport.yandex.ru:synchronized; no-re-reg-required=1; _ym_isad=2; yp=1722519398.yu.2683313871714518733; ymex=1725024998.oyu.2683313871714518733; desktop_session_key=87ce490372b3ae275d1b14ec84491d78ac6d7888d83523734da69a60062bb1a114ada272b88835cb3345d791c63798f7a5e030c3987f5a520bc98316c97b642119d13f45501233b7dbaac581df21d8a9f62bb72a72c22747a7101b657353acf2; desktop_session_key.sig=65ZVJdi7zQzkz4nCajMC2XEz0tg; PHPSESSID=1042beaa8a17c3013a72faf720e4af8b; uid=177428860; _csrf_csrf_token=RpiA7Ev70ldUy1Qi6Crz-r8p0UWIjBEKmiMsECagrqs; mobile=no; mda_exp_enabled=1; _ym_visorc=b; _yasc=zZwZo3z7Jp30d2W128uufBapVhUFnDER6X5PyZxvWsVgYiStkDa0zB46KvLPnwBW; yandex_plus_metrika_cookie=true; _ym_d=1722435387";
+    
 
     public List<string> LinksOnParsedFilms { get; }
     
@@ -43,17 +45,20 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     public async Task<ICollection<Review>> GetAllReviewsAsync()
     {
         List<Review> reviews = new List<Review>();
-        foreach (var UrlOnFilm in LinksOnParsedFilms)
+        if (LinksOnParsedFilms.Count == 0)
+            return reviews;
+        
+        await SetCookieOnKinopoiskAsync(KINOPOISK_COOKIES);
+        foreach (var urlOnFilm in LinksOnParsedFilms)
         {
-            await _webDriver.Navigate().GoToUrlAsync(UrlOnFilm + KINOPOISK_REVIEWS_PAGE_POSTFIX);
-            WebDriverWait wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(40));
-            await Task.Run(() => wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("userReview"))));
-            reviews.AddRange(GetReviewsByFilms());
+            await LoadFilmReviewsPageAsync(urlOnFilm);
+            reviews.AddRange(GetReviewsByFilm());
         }
+        _webDriver.Quit();
         return reviews;
     }
 
-    private async void SetCookieOnKinopoiskAsync(string cookies)
+    private async Task SetCookieOnKinopoiskAsync(string cookies)
     {
         if(String.IsNullOrEmpty(cookies))
             return;
@@ -73,6 +78,13 @@ public class KinopoiskFilmReviewParser : IReviewsParser
         await GoToUrlAsync(originalPageUrl);
     }
 
+    private async Task LoadFilmReviewsPageAsync(string filmUrl)
+    {
+        await _webDriver.Navigate().GoToUrlAsync(filmUrl + KINOPOISK_REVIEWS_PAGE_POSTFIX);
+        WebDriverWait wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(40));
+        await Task.Run(() => wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("userReview"))));
+    }
+
     private async Task GoToUrlAsync(string url) 
         => await Task.Run(() => _webDriver.Url = url);
 
@@ -88,7 +100,7 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     private IWebElement GetReviewTitleElement(IWebElement reviewWebElement)
         => reviewWebElement.FindElement(By.ClassName(KINOPOISK_FILM_REVIEW_TITLE_CLASS_NAME));
 
-    private IWebElement GetReviewTextTitleElement(IWebElement reviewWebElement)
+    private IWebElement GetReviewTextElement(IWebElement reviewWebElement)
         => reviewWebElement.FindElement(By.XPath(KINOPOISK_FILM_REVIEW_TEXT_XPATH));
 
     private IWebElement GetReviewOpinionElement(IWebElement reviewWebElement)
@@ -97,22 +109,36 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     private bool IsReviewsPage(string url)
         => url.Contains(KINOPOISK_ORIGINAL_PAGE_URL) && url.Contains(KINOPOISK_REVIEWS_PAGE_POSTFIX);
     
-    private List<Review> GetReviewsByFilms()
+    private List<Review> GetReviewsByFilm()
     {
-        List<IWebElement> reviewsWebElements = new List<IWebElement>(_webDriver.FindElements(By.ClassName("userReview")));
-        List<Review> reviews = new List<Review>();
-        for(int i = 0; i < reviewsWebElements.Count; i++)
+        for (int nTry = 0; nTry < 5; nTry++)
         {
-            IWebElement reviewTitle = reviewsWebElements[i].FindElement(By.ClassName("sub_title"));
-            IWebElement reviewText = reviewsWebElements[i].FindElement(By.XPath(".//div[2]/table/tbody/tr/td/div/p/span"));
-            var review = new Review()
+            try
             {
-                ReviewTitle = reviewTitle.Text,
-                ReviewText = reviewText.Text
-            };
-            reviews.Add(review);
+                List<IWebElement> reviewsWebElements = new List<IWebElement>(GetAllReviewWebElements());
+                List<Review> reviews = new List<Review>();
+                Parallel.For(0, reviewsWebElements.Count, (i, state) =>
+                {
+                    IWebElement reviewTitle = GetReviewTitleElement(reviewsWebElements[i]);
+                    IWebElement reviewText = GetReviewTextElement(reviewsWebElements[i]);
+                    IWebElement reviewOpinion = GetReviewOpinionElement(reviewsWebElements[i]);
+                    var review = new Review()
+                    {
+                        ReviewTitle = reviewTitle.Text,
+                        ReviewText = reviewText.Text,
+                        ReviewOpinion = reviewOpinion.GetAttribute("class").Split(' ')[1]
+                    };
+                    reviews.Add(review);
+                });
+
+                return reviews;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
-        return reviews;
+        throw new WebException("Parsing review error");
     }
 }

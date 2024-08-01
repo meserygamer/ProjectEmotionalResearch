@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DataSetCompiler.Core\DataSetCompiler.Core.csproj" />
+      <ProjectReference Include="..\KinopoiskFilmReviewsParser\KinopoiskFilmReviewsParser.csproj" />
     </ItemGroup>
 
     <ItemGroup>
