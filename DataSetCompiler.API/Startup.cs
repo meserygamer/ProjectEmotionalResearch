@@ -15,8 +15,11 @@ public static class Startup
     public static async Task Main()
     {
         IWebDriver webDriver = new ChromeStealthDriverFactory().CreateDriver();
-        KinopoiskFilmReviewParser parser = new KinopoiskFilmReviewParser(webDriver, "https://www.kinopoisk.ru/film/535341/");
-        List<Review> reviews = new List<Review>(await parser.GetAllReviewsAsync());
+        KinopoiskFilmReviewParser parser = new KinopoiskFilmReviewParser(webDriver
+            , ["https://www.kinopoisk.ru/film/535341/"
+                , "https://www.kinopoisk.ru/film/462682/"
+                , "https://www.kinopoisk.ru/film/397667/"]);
+        List<Film?> reviews = new List<Film?>(await parser.GetAllReviewsAsync());
 
         string jsonData = JsonSerializer.Serialize(reviews, new JsonSerializerOptions()
         {

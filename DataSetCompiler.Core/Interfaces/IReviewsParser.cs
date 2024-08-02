@@ -4,5 +4,5 @@ namespace DataSetCompiler.Core.Interfaces;
 
 public interface IReviewsParser
 {
-    Task<ICollection<Review>> GetAllReviewsAsync();
+    Task<ICollection<Film?>> GetAllReviewsAsync();
 }
