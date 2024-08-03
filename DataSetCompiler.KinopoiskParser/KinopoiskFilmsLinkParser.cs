@@ -1,5 +1,8 @@
 ﻿using DataSetCompiler.Core.Interfaces;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+using SeleniumExtras.WaitHelpers;
+using SeleniumStealth.NET.Clients.Extensions;
 
 namespace KinopoiskFilmReviewsParser;
 
@@ -48,10 +51,21 @@ public class KinopoiskFilmsLinkParser : ILinkParser
 
     #region Methods
 
-    private List<string> GetFilmLinksFromPage(int pageNumber)
+    private async Task<List<string>> GetFilmLinksFromPage(int pageNumber)
     {
         List<string> filmLinks = new();
+        
+        await GoToFilmsTopPageAsync(pageNumber);
+        //
         return filmLinks;
+    }
+
+    private async Task GoToFilmsTopPageAsync(int pageNumber)
+    {
+        await _webDriver.Navigate().GoToUrlAsync($"{FilmsTop500KinopoiskUrl}&page={pageNumber}");
+        WebDriverWait wait = new WebDriverWait(_webDriver, TimeSpan.FromSeconds(40));
+        wait.Until(ExpectedConditions.ElementIsVisible(By.ClassName("styles_root__ti07r")));
+        _webDriver.SpecialWait(new Random().Next(2000, 3000));
     }
     
     private int CalculateNumberOfPagesToParse(int maxLinksCount)
