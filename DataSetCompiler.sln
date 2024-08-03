@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinopoiskFilmReviewsParser", "KinopoiskFilmReviewsParser\KinopoiskFilmReviewsParser.csproj", "{6F825A06-F63E-410F-AE6B-E73FF821136E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSetCompiler.KinopoiskParser", "DataSetCompiler.KinopoiskParser\DataSetCompiler.KinopoiskParser.csproj", "{6F825A06-F63E-410F-AE6B-E73FF821136E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSetCompiler.API", "DataSetCompiler.API\DataSetCompiler.API.csproj", "{1317F2B3-0587-43DF-B7FD-33FFB0B3709A}"
 EndProject

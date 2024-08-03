@@ -9,7 +9,7 @@ using Cookie = OpenQA.Selenium.Cookie;
 
 namespace KinopoiskFilmReviewsParser;
 
-public class KinopoiskFilmReviewParser : IReviewsParser
+public class KinopoiskFilmsReviewsParser : IReviewsParser
 {
     #region Constants
 
@@ -31,7 +31,7 @@ public class KinopoiskFilmReviewParser : IReviewsParser
     
     #region Сonstructors
 
-    public KinopoiskFilmReviewParser(IWebDriver webDriver, KinopoiskSettings settings)
+    public KinopoiskFilmsReviewsParser(IWebDriver webDriver, KinopoiskSettings settings)
     {
         _webDriver = webDriver;
         Settings = settings;

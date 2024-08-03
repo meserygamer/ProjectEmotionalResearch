@@ -18,7 +18,7 @@ public static class Startup
             throw new JsonException("path or appsettings file was incorrect");
         
         IWebDriver webDriver = new ChromeStealthDriverFactory().CreateDriver();
-        KinopoiskFilmReviewParser parser = new KinopoiskFilmReviewParser(webDriver, appSettings.KinopoiskParserSettings.Adapt<KinopoiskSettings>());
+        KinopoiskFilmsReviewsParser parser = new KinopoiskFilmsReviewsParser(webDriver, appSettings.KinopoiskParserSettings.Adapt<KinopoiskSettings>());
         List<Film?> reviews = new List<Film?>(await parser.GetAllReviewsAsync());
 
         string jsonData = JsonSerializer.Serialize(reviews, new JsonSerializerOptions()
