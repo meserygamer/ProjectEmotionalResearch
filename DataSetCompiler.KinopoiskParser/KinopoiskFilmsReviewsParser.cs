@@ -149,9 +149,9 @@ public class KinopoiskFilmsReviewsParser : IReviewsParser
             string[] yearOfReleaseAndOriginalName = filmYearOfReleaseElement.Text.Split(" ");
             return new Film()
             {
-                FilmTitle = filmTitleElement.Text
-                ,YearOfRelease = Convert.ToInt32(yearOfReleaseAndOriginalName[^1])
-                ,FilmUrl = urlOnFilm
+                FilmTitle = filmTitleElement.Text,
+                YearOfRelease = Convert.ToInt32(yearOfReleaseAndOriginalName[^1]),
+                FilmUrl = urlOnFilm
             };
         });
         
