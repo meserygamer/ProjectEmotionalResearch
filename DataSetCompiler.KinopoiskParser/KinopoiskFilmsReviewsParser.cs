@@ -1,4 +1,7 @@
 ﻿using System.Net;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Text.Json;
 using DataSetCompiler.Core.DomainEntities;
 using DataSetCompiler.Core.Interfaces;
 using OpenQA.Selenium;
@@ -31,10 +34,9 @@ public class KinopoiskFilmsReviewsParser : IReviewsParser
     
     #region Сonstructors
 
-    public KinopoiskFilmsReviewsParser(IWebDriver webDriver, KinopoiskSettings settings)
+    public KinopoiskFilmsReviewsParser(IWebDriver webDriver)
     {
         _webDriver = webDriver;
-        Settings = settings;
     }
 
     #endregion
@@ -42,20 +44,36 @@ public class KinopoiskFilmsReviewsParser : IReviewsParser
 
     #region IReviewsParser
 
-    public async Task<ICollection<Film?>> GetAllReviewsAsync()
+    public async Task<ICollection<Film>> GetAllReviewsAsync(ICollection<string> filmUrls)
     {
-        List<Film?> films = new List<Film?>();
-        if (Settings.FilmsUrls.Count == 0)
-            return films;
-        
-        if(!String.IsNullOrEmpty(Settings.Cookies))
-            await SetCookieOnKinopoiskAsync();
-
-        foreach (var urlOnFilm in Settings.FilmsUrls)
-            films.Add(await GetFilmDataAsync(urlOnFilm));
+        if (filmUrls is null)
+            throw new ArgumentNullException(nameof(filmUrls));
+            
+        List<Film> films = new List<Film>();
+        foreach (var filmUrl in filmUrls)
+            films.Add(await GetFilmDataAsync(filmUrl));
         
         _webDriver.Quit();
         return films;
+    }
+
+    public async Task<int> PrintAllReviewsIntoFileAsync(ICollection<string> filmUrls,
+        JsonSerializerOptions serializerOptions,
+        string outputFile = "reviews.json")
+    {
+        if (String.IsNullOrEmpty(outputFile))
+            throw new ArgumentException("Path to file was incorrect", nameof(outputFile));
+
+        ICollection<Film> films = await GetAllReviewsAsync(filmUrls);
+        
+        string filmsJson = await Task.Run(() => JsonSerializer.Serialize(films, serializerOptions));
+        using (var fs = new FileStream("LinksOnFilms.json", FileMode.Append))
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(filmsJson);
+            await fs.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        return films.Select(film => film.Reviews.Count).Sum();
     }
 
     #endregion
@@ -63,8 +81,6 @@ public class KinopoiskFilmsReviewsParser : IReviewsParser
 
     #region Properties
 
-    public KinopoiskSettings Settings { get; }
-    
     private bool IsDriverOnReviewsPage 
         => _webDriver.Url.Contains(KinopoiskOriginalPageUrl) && _webDriver.Url.Contains(KinopoiskReviewsPagePostfix);
 
@@ -72,23 +88,6 @@ public class KinopoiskFilmsReviewsParser : IReviewsParser
 
 
     #region Methods
-
-    private async Task SetCookieOnKinopoiskAsync()
-    {
-        string originalPageUrl = _webDriver.Url;
-        await _webDriver.Navigate().GoToUrlAsync(KinopoiskOriginalPageUrl);
-        
-        for (int i = 0; i < Settings.Cookies.Split("; ").Length; i++)
-        {
-            string cookie = Settings.Cookies.Split("; ")[i].Trim();
-            _webDriver.Manage().Cookies.AddCookie(
-                new Cookie
-                (cookie.Split('=')[0]
-                    , cookie.Split('=')[1]));
-        }
-        
-        await _webDriver.Navigate().GoToUrlAsync(originalPageUrl);
-    }
 
     private async Task LoadFilmReviewsPageAsync(string filmUrl, int numberOfPage = 1)
     {
@@ -134,10 +133,10 @@ public class KinopoiskFilmsReviewsParser : IReviewsParser
         return reviewsOnFilm;
     }
 
-    private async Task<Film?> GetFilmDataAsync(string urlOnFilm, bool isAlreadyOnFilmPage = false)
+    private async Task<Film> GetFilmDataAsync(string urlOnFilm, bool isAlreadyOnFilmPage = false)
     {
         if (String.IsNullOrEmpty(urlOnFilm))
-            return null;
+            throw new ArgumentNullException(nameof(urlOnFilm));
         
         if(!isAlreadyOnFilmPage)
             await LoadFilmReviewsPageAsync(urlOnFilm);

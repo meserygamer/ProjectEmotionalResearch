@@ -4,9 +4,9 @@ namespace DataSetCompiler.API.AppSettings;
 
 public class KinopoiskParserSettings
 {
+    [JsonPropertyName("films_urls_file_path")]
+    public string? FilmsUrlsFilePath { get; set; }
+
     [JsonPropertyName("cookies")]
     public string? Cookies { get; set; }
-    
-    [JsonPropertyName("films_urls")]
-    public ICollection<string> FilmsUrls { get; set; } = null!;
 }

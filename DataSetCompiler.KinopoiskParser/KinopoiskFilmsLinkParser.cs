@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text;
+using System.Text.Json;
 using DataSetCompiler.Core.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
@@ -12,7 +14,6 @@ public class KinopoiskFilmsLinkParser : ILinkParser
     #region Constants
 
     public const string FilmsTop500KinopoiskUrl = "https://www.kinopoisk.ru/lists/movies/top500/?sort=votes";
-    public const string KinopoiskOriginalPageUrl = "https://www.kinopoisk.ru/";
     
     private const int NumberFilmLinksOnPage = 50;
 
@@ -28,16 +29,12 @@ public class KinopoiskFilmsLinkParser : ILinkParser
 
     #region Constructors
 
-    public KinopoiskFilmsLinkParser(Func<IWebDriver> webDriverFactory, KinopoiskSettings settings)
+    public KinopoiskFilmsLinkParser(Func<IWebDriver> webDriverFactory)
     {
         if (webDriverFactory is null)
             throw new ArgumentNullException(nameof(webDriverFactory));
         
-        if (settings is null)
-            throw new ArgumentNullException(nameof(settings));
-        
         _webDriver = webDriverFactory.Invoke();
-        Settings = settings;
     }
 
     #endregion
@@ -49,41 +46,36 @@ public class KinopoiskFilmsLinkParser : ILinkParser
     {
         int numberOfPages = CalculateNumberOfPagesToParse(maxLinksCount);
         List<string> filmLinks = new();
-
-        await SetCookieOnKinopoiskAsync();
+        
         for (int i = 1; i <= numberOfPages; i++)
             filmLinks.AddRange(await GetFilmLinksFromPageAsync(i));
         return filmLinks;
     }
 
-    #endregion
+    public async Task<List<string>> GetLinksWithPrintAsync(
+        int maxLinksCount,
+        JsonSerializerOptions serializerOptions,
+        string outputFile = "LinksOnFilms.json")
+    {
+        if (String.IsNullOrEmpty(outputFile))
+            throw new ArgumentException("Path to file was incorrect", nameof(outputFile));
 
+        List<string> links = await GetLinksAsync(maxLinksCount);
+        
+        string linksJson = await Task.Run(() => JsonSerializer.Serialize(links, serializerOptions));
+        using (var fs = new FileStream("LinksOnFilms.json", FileMode.Create))
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(linksJson);
+            await fs.WriteAsync(buffer, 0, buffer.Length);
+        }
 
-    #region Properties
-
-    public KinopoiskSettings Settings { get; }
+        return links;
+    }
 
     #endregion
 
 
     #region Methods
-    
-    private async Task SetCookieOnKinopoiskAsync()
-    {
-        string originalPageUrl = _webDriver.Url;
-        await _webDriver.Navigate().GoToUrlAsync(KinopoiskOriginalPageUrl);
-        
-        for (int i = 0; i < Settings.Cookies.Split("; ").Length; i++)
-        {
-            string cookie = Settings.Cookies.Split("; ")[i].Trim();
-            _webDriver.Manage().Cookies.AddCookie(
-                new Cookie
-                (cookie.Split('=')[0]
-                    , cookie.Split('=')[1]));
-        }
-        
-        await _webDriver.Navigate().GoToUrlAsync(originalPageUrl);
-    }
 
     private async Task<List<string>> GetFilmLinksFromPageAsync(int pageNumber)
     {
@@ -120,5 +112,4 @@ public class KinopoiskFilmsLinkParser : ILinkParser
     }
 
     #endregion
-    
 }
