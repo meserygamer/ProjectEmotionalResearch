@@ -7,9 +7,9 @@ using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using SeleniumStealth.NET.Clients.Extensions;
 
-namespace KinopoiskFilmReviewsParser;
+namespace KinopoiskFilmReviewsParser.Parsers.LinksParsers;
 
-public class KinopoiskFilmsLinkParser : ILinkParser
+public class KinopoiskTop500FilmsLinksParser : ILinkParser
 {
     #region Constants
 
@@ -29,7 +29,7 @@ public class KinopoiskFilmsLinkParser : ILinkParser
 
     #region Constructors
 
-    public KinopoiskFilmsLinkParser(Func<IWebDriver> webDriverFactory)
+    public KinopoiskTop500FilmsLinksParser(Func<IWebDriver> webDriverFactory)
     {
         if (webDriverFactory is null)
             throw new ArgumentNullException(nameof(webDriverFactory));
@@ -49,7 +49,7 @@ public class KinopoiskFilmsLinkParser : ILinkParser
         
         for (int i = 1; i <= numberOfPages; i++)
             filmLinks.AddRange(await GetFilmLinksFromPageAsync(i));
-        return filmLinks;
+        return (filmLinks.Count > maxLinksCount)? filmLinks[0..maxLinksCount] : filmLinks;
     }
 
     public async Task<List<string>> GetLinksWithPrintAsync(

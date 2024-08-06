@@ -1,8 +1,9 @@
 ﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 using DataSetCompiler.Core.DomainEntities;
-using KinopoiskFilmReviewsParser;
+using KinopoiskFilmReviewsParser.BrowserDrivers;
 using KinopoiskFilmReviewsParser.Parsers.FilmsParser;
+using KinopoiskFilmReviewsParser.Parsers.LinksParsers;
 using AppConfiguration = DataSetCompiler.API.AppSettings;
 
 namespace DataSetCompiler.API;
@@ -30,7 +31,7 @@ public static class Startup
             filmsUrls = await JsonSerializer.DeserializeAsync<List<string>>(fs) ?? [];
         }
         else 
-            filmsUrls = await new KinopoiskFilmsLinkParser(() => new ChromeStealthDriverBuilder()
+            filmsUrls = await new KinopoiskTop500FilmsLinksParser(() => new ChromeStealthDriverBuilder()
                     .AddCookie("https://www.kinopoisk.ru/", appSettings.KinopoiskParserSettings.Cookies)
                     .BuildAsync().Result)
                 .GetLinksWithPrintAsync(500, jsonOptions);
@@ -40,7 +41,7 @@ public static class Startup
                 .BuildAsync().Result, 2)
             .PrintAllReviewsIntoFileAsync(
                 filmsUrls,
-                2,
+                40,
                 jsonOptions,
                 $"FilmsReviews.json");
         

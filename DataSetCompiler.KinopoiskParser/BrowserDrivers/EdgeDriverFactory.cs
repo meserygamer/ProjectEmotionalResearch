@@ -1,6 +1,6 @@
 ﻿using OpenQA.Selenium.Edge;
 
-namespace KinopoiskFilmReviewsParser;
+namespace KinopoiskFilmReviewsParser.BrowserDrivers;
 
 public class KinopoiskReviewsParsingEdgeDriverFactory
 {

@@ -4,7 +4,7 @@ using SeleniumStealth.NET.Clients.Enums;
 using SeleniumStealth.NET.Clients.Extensions;
 using SeleniumStealth.NET.Clients.Models;
 
-namespace KinopoiskFilmReviewsParser;
+namespace KinopoiskFilmReviewsParser.BrowserDrivers;
 
 public class ChromeStealthDriverFactory
 {
