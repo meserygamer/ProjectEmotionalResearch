@@ -63,7 +63,7 @@ public class KinopoiskTop500FilmsLinksParser : ILinkParser
         List<string> links = await GetLinksAsync(maxLinksCount);
         
         string linksJson = await Task.Run(() => JsonSerializer.Serialize(links, serializerOptions));
-        using (var fs = new FileStream("LinksOnFilms.json", FileMode.Create))
+        using (var fs = new FileStream(outputFile, FileMode.Create))
         {
             byte[] buffer = Encoding.UTF8.GetBytes(linksJson);
             await fs.WriteAsync(buffer, 0, buffer.Length);

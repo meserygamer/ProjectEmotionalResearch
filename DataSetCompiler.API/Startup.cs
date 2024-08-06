@@ -31,10 +31,10 @@ public static class Startup
             filmsUrls = await JsonSerializer.DeserializeAsync<List<string>>(fs) ?? [];
         }
         else 
-            filmsUrls = await new KinopoiskTop500FilmsLinksParser(() => new ChromeStealthDriverBuilder()
+            filmsUrls = await new KinopoiskTopСontroversialFilmsLinksParser(new ChromeStealthDriverBuilder()
                     .AddCookie("https://www.kinopoisk.ru/", appSettings.KinopoiskParserSettings.Cookies)
                     .BuildAsync().Result)
-                .GetLinksWithPrintAsync(500, jsonOptions);
+                .GetLinksWithPrintAsync(400, jsonOptions);
 
         List<Film> films = await new KinopoiskFilmsParser(() => new ChromeStealthDriverBuilder()
                 .AddCookie("https://www.kinopoisk.ru/", appSettings.KinopoiskParserSettings.Cookies)
