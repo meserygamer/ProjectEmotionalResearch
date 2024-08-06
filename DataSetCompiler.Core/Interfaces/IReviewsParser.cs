@@ -5,9 +5,12 @@ namespace DataSetCompiler.Core.Interfaces;
 
 public interface IReviewsParser
 {
-    Task<ICollection<Film>> GetAllReviewsAsync(ICollection<string> filmUrls);
+    Task<List<Film>> GetAllReviewsAsync(ICollection<string> filmUrls,
+        int? frequencyOfWebDriverChanges
+        );
     
-    Task<int> PrintAllReviewsIntoFileAsync(ICollection<string> filmUrls,
+    Task<List<Film>> PrintAllReviewsIntoFileAsync(ICollection<string> filmUrls,
+        int? frequencyOfWebDriverChanges,
         JsonSerializerOptions serializerOptions,
         string outputFile);
 }

@@ -1,8 +1,8 @@
-﻿using System.Text;
-using System.Text.Encodings.Web;
+﻿using System.Text.Encodings.Web;
 using System.Text.Json;
+using DataSetCompiler.Core.DomainEntities;
 using KinopoiskFilmReviewsParser;
-using OpenQA.Selenium;
+using KinopoiskFilmReviewsParser.Parsers.FilmsParser;
 using AppConfiguration = DataSetCompiler.API.AppSettings;
 
 namespace DataSetCompiler.API;
@@ -20,10 +20,6 @@ public static class Startup
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             WriteIndented = true
         };
-
-        IWebDriver webDriver = await new ChromeStealthDriverBuilder()
-            .AddCookie("https://www.kinopoisk.ru/", appSettings.KinopoiskParserSettings.Cookies)
-            .BuildAsync();
         
         List<string> filmsUrls;
         if (File.Exists(appSettings.KinopoiskParserSettings.FilmsUrlsFilePath))
@@ -31,18 +27,24 @@ public static class Startup
             await using (FileStream fs = File.Open(appSettings.KinopoiskParserSettings.FilmsUrlsFilePath,
                              FileMode.Open,
                              FileAccess.Read)) 
-                filmsUrls = await JsonSerializer.DeserializeAsync<List<string>>(fs) ?? [];
+            filmsUrls = await JsonSerializer.DeserializeAsync<List<string>>(fs) ?? [];
         }
-        else
-        {
-            filmsUrls = await new KinopoiskFilmsLinkParser(() => webDriver)
+        else 
+            filmsUrls = await new KinopoiskFilmsLinkParser(() => new ChromeStealthDriverBuilder()
+                    .AddCookie("https://www.kinopoisk.ru/", appSettings.KinopoiskParserSettings.Cookies)
+                    .BuildAsync().Result)
                 .GetLinksWithPrintAsync(500, jsonOptions);
-        }
+
+        List<Film> films = await new KinopoiskFilmsParser(() => new ChromeStealthDriverBuilder()
+                .AddCookie("https://www.kinopoisk.ru/", appSettings.KinopoiskParserSettings.Cookies)
+                .BuildAsync().Result, 2)
+            .PrintAllReviewsIntoFileAsync(
+                filmsUrls,
+                2,
+                jsonOptions,
+                $"FilmsReviews.json");
         
-        int reviewsCount = await new KinopoiskFilmsReviewsParser(webDriver).PrintAllReviewsIntoFileAsync(
-            filmsUrls,
-            jsonOptions
-        );
-        Console.WriteLine($"Review count: {reviewsCount}");
+        Console.WriteLine($"Review count: {films.Select(film => film.Reviews.Count).Sum()}\n" +
+                          $"Film count: {films.Count}");
     }
 }
